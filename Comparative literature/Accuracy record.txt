@@ -1,0 +1,113 @@
+--lr', type=float, default=1.5*1e-4
+输出1通道， loss = loss_seg +loss_dice_+ 2*sec_loss  #  unet  self.sizem=24   decoder2 add
+sen_v: 0.845307, acc_v: 0.968342, spec_v: 0.980362,    unet    d1 = d1  # mine
+
+输出2通道， loss = loss_seg +loss_dice_+ 2*sec_loss  # unet  self.sizem=16  decoder2 add
+ sen_v: 0.827346, acc_v: 0.969063, spec_v: 0.982911
+ sen_v: 0.819155, acc_v: 0.969246, spec_v: 0.983891     unet   d1 = F.softmax(d1,dim=1)  # mine
+ 
+输出2通道， loss = loss_seg +loss_dice_+ 2*sec_loss  # unet  self.sizem=24  decoder2 add
+sen_v: 0.824795, acc_v: 0.969502, spec_v: 0.983611
+sen_v: 0.822810, acc_v: 0.969598, spec_v: 0.983908     unet   d1 = F.softmax(d1,dim=1)  # mine
+sen_v: 0.821623, acc_v: 0.969600, spec_v: 0.984014
+
+输出2通道， loss = loss_seg +loss_dice_+ 2*sec_loss  #  unet  self.sizem=24   decoder2 add
+sen_v: 0.821193, acc_v: 0.969216, spec_v: 0.983647    unet    d1 = d1  # mine
+sen_v: 0.818876, acc_v: 0.969212, spec_v: 0.983856 
+ 
+输出2通道， loss = loss_seg +loss_dice_+ 2*sec_loss  #  unet  self.sizem=24  decoder2 add
+sen_v: 0.820554, acc_v: 0.969430, spec_v: 0.983944     unet    d1 = F.sigmoid(d1)  # mine
+sen_v: 0.824997, acc_v: 0.969418, spec_v: 0.983505 
+
+输出2通道， loss = loss_seg +loss_dice_+ 2*sec_loss  #  去掉unet  
+sen_v: 0.817075, acc_v: 0.968673, spec_v: 0.983458 
+
+输出2通道， loss = loss_seg +loss_dice_+ 2*sec_loss  #  unet  self.sizem=24   decoder2 mul 
+sen_v: 0.821099, acc_v: 0.969033, spec_v: 0.983445,   d1 = F.sigmoid(d1)  # mine
+sen_v: 0.822173, acc_v: 0.969072, spec_v: 0.983389
+
+输出2通道， loss = loss_seg +loss_dice_+ 2*sec_loss    unet self.sizem=24  d1 = F.softmax(d1,dim=1)  # mine  
+sen_v: 0.813770, acc_v: 0.969454, spec_v: 0.984593     if self.conv_decoder ==True: out = out*skip
+sen_v: 0.816419, acc_v: 0.969391, spec_v: 0.984272
+
+输出2通道， loss = loss_seg +loss_dice_+ 2*sec_loss   unet  self.sizem=24  d1 = F.softmax(d1,dim=1)  # mine           
+sen_v: 0.818454, acc_v: 0.969472, spec_v: 0.984193      if self.conv_decoder ==True: out = torch.cat([out,skip], dim=1)
+sen_v: 0.826378, acc_v: 0.969306, spec_v: 0.983246
+sen_v: 0.822394, acc_v: 0.969469, spec_v: 0.983807
+sen_v: 0.824749, acc_v: 0.969428, spec_v: 0.983527
+输出2通道， loss = loss_seg +loss_dice_+ 2*sec_loss   unet self.sizem=24  d1 = F.softmax(d1,dim=1)  # mine      
+sen_v: 0.822635, acc_v: 0.969377, spec_v: 0.983709    if self.conv_decoder ==True: out = out+skip                                                                                              
+sen_v: 0.826767, acc_v: 0.969255, spec_v: 0.983180    has not self.la1(enc1)  2,3
+ 
+输出2通道， loss = loss_seg +loss_dice_+ 2*sec_loss   unet  self.sizem=24 d1 = F.softmax(d1,dim=1)  # mine   
+sen_v: 0.825402, acc_v: 0.969387, spec_v: 0.983456     has notx4 = (self.param*xc + x4).permute(0, 2, 1).view(b, c, h, w)  depth=4
+sen_v: 0.827426, acc_v: 0.969415, spec_v: 0.983288 
+sen_v: 0.830179, acc_v: 0.969383, spec_v: 0.982984 
+
+输出2通道， loss = loss_seg +loss_dice_+ 2*sec_loss   unet self.sizem=24  d1 = F.softmax(d1,dim=1)  # mine   
+sen_v: 0.823457, acc_v: 0.969423, spec_v: 0.983665     has notx4 = (self.param*xc + x4).permute(0, 2, 1).view(b, c, h, w)  depth=2
+sen_v: 0.826374, acc_v: 0.969194, spec_v: 0.983137 
+ 
+输出2通道， loss = loss_seg +loss_dice_+ 2*sec_loss   unet  self.sizem=32  d1 = F.softmax(d1,dim=1)  # mine   depth=4
+sen_v: 0.815958, acc_v: 0.969414, spec_v: 0.984384    x4 = (self.param*xc + x4).permute(0, 2, 1)
+sen_v: 0.820521, acc_v: 0.969268, spec_v: 0.983774 
+ 
+输出2通道， loss = loss_seg +loss_dice_+ 2*sec_loss   unet  self.sizem=24  d1 = F.softmax(d1,dim=1)  # mine   depth=4
+sen_v: 0.824519, acc_v: 0.969663, spec_v: 0.983831     x4 = (self.param*xc + x4).permute(0, 2, 1)
+sen_v: 0.826688, acc_v: 0.969550, spec_v: 0.983500    maxpool = nn.conv  unsampling= nn.ConvTranspose2d
+sen_v: 0.834297, acc_v: 0.969218, spec_v: 0.982408 
+sen_v: 0.820690, acc_v: 0.969736, spec_v: 0.984265
+###############################################
+输出2通道， loss = loss_seg +loss_dice_+ 2*sec_loss   unet  self.sizem=24  d1 = F.softmax(d1,dim=1)  # mine   depth=4
+                                                      x4 = (self.param*xc + x4).permute(0, 2, 1)  
+sen_v: 0.828659, acc_v: 0.970030, spec_v: 0.983832,    maxpool = nn.conv  unsampling= nn.ConvTranspose2d
+sen_v: 0.837824, acc_v: 0.969617, spec_v: 0.982510,   --lr', type=float, default=9.5*1e-4
+##**********************#######################
+sen_v: 0.831242, acc_v: 0.970267, spec_v: 0.983838   '--lr', type=float, default=2*1e-3
+sen_v: 0.831717, acc_v: 0.970309, spec_v: 0.983834
+sen_v: 0.833247, acc_v: 0.970277, spec_v: 0.983657
+
+sen_v: 0.824979, acc_v: 0.970018, spec_v: 0.984170    '--lr', type=float, default=1*1e-2
+sen_v: 0.826034, acc_v: 0.969979, spec_v: 0.984028
+
+sen_v: 0.825239, acc_v: 0.970286, spec_v: 0.984423    '--lr', type=float, default=1.5*1e-3
+sen_v: 0.827609, acc_v: 0.970161, spec_v: 0.984065
+ 
+ sen_v: 0.818543, acc_v: 0.970163, spec_v: 0.984939,   '--lr', type=float, default=3*1e-3
+ 
+sen_v: 0.825863, acc_v: 0.970201, spec_v: 0.984297      '--lr', type=float, default=2*1e-3
+sen_v: 0.821083, acc_v: 0.970318, spec_v: 0.984876       nn.Relu->nn.LeakyReLU
+ 
+batch_size = 2   loss = loss_seg +loss_dice_+ 2*sec_loss  #
+sen_v: 0.822852, acc_v: 0.970264, spec_v: 0.984665        
+sen_v: 0.828556, acc_v: 0.970279, spec_v: 0.984113
+sen_v: 0.829686, acc_v: 0.970257, spec_v: 0.983996
+
+
+batch_size = 2  loss = loss_seg +loss_dice_#+ 2*sec_loss  #
+sen_v: 0.825615, acc_v: 0.970064, spec_v: 0.984184
+sen_v: 0.829152, acc_v: 0.970144, spec_v: 0.983936
+
+loss = 0.5*loss_seg +loss_dice_+ 2*sec_loss
+sen_v: 0.828492, acc_v: 0.969969, spec_v: 0.983781
+sen_v: 0.836595, acc_v: 0.969730, spec_v: 0.982733
+
+loss = 2*loss_seg +loss_dice_+ 2*sec_loss
+sen_v: 0.821507, acc_v: 0.970279, spec_v: 0.984785
+sen_v: 0.824578, acc_v: 0.970211, spec_v: 0.984415 
+
+loss = loss_seg + 1.5*loss_dice_+ 2*sec_loss
+sen_v: 0.831002, acc_v: 0.970012, spec_v: 0.983586 
+sen_v: 0.825517, acc_v: 0.970152, spec_v: 0.984263 
+sen_v: 0.828888, acc_v: 0.970066, spec_v: 0.983850 
+
+loss = loss_seg/3.0 + 1.5*loss_dice_/3.0+ 2*sec_loss/3.0
+sen_v: 0.828398, acc_v: 0.970000, spec_v: 0.983822
+sen_v: 0.827689, acc_v: 0.970082, spec_v: 0.983980
+sen_v: 0.825555, acc_v: 0.970097, spec_v: 0.984202,
+
+loss = 2*loss_seg + 2*loss_dice_+ 4*sec_loss
+sen_v: 0.827741, acc_v: 0.970115, spec_v: 0.984017
+sen_v: 0.825757, acc_v: 0.970174, spec_v: 0.984267
+
+sen_v: 0.824441, acc_v: 0.970174, spec_v: 0.984382
