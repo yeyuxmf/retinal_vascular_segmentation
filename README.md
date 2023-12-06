@@ -9,6 +9,8 @@ Retinal vascular segmentation，Transformer，CNN， Pytorch,  Python
 # Method
 Reference 3D medical image segmentation model:
 1. Shaker A, Maaz M, Rasheed H, et al. UNETR++: delving into efficient and accurate 3D medical image segmentation[J]. arXiv preprint arXiv:2212.04497, 2022.
+![企业微信截图_17018485728081](https://github.com/huang229/retinal_vascular_segmentation/assets/29627190/09a2da2f-5509-45a3-bd11-9779dadfab64)
+This is the model structure diagram in the UNETR++paper. I directly modified it from 3D to 2D image application.
 
 # Train
 python main.py 
