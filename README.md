@@ -24,7 +24,7 @@ HRF is a high-resolution dataset with different testing methods.
 
 ![2](https://github.com/huang229/retinal_vascular_segmentation/assets/29627190/421d8ed1-df73-453a-8453-04237b1cefdd)
 
-![3](https://github.com/huang229/retinal_vascular_segmentation/assets/29627190/0b13c26b-a7d9-44fb-983c-1bcdcdb40cec)
+![3](https://github.com/huang229/retinal_vascular_segmentation/assets/29627190/788f2da8-11a8-4b73-9862-309baa79e828)
 
 ![4](https://github.com/huang229/retinal_vascular_segmentation/assets/29627190/8c3fe53f-4eab-42bb-aace-497e8d16d83c)
 
