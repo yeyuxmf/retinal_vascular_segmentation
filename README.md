@@ -1,5 +1,5 @@
 # retinal_vascular_segmentation
-Retinal vascular segmentation，Transformer，CNN， Pytorch,  Python  2023.09.01
+Retinal vascular segmentation，Transformer，CNN， Pytorch,  Python，  Date:2023.09.01
 
 # Introduce
 1. This is a retinal vessel segmentation, although its accuracy surpasses all current papers on the HRF, DRIVE, STARE, and CHASEDB1 datasets, it is not innovative and is a semi-finished paper.
