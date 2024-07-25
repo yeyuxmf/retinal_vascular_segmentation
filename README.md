@@ -3,7 +3,7 @@ Retinal vascular segmentation，Transformer，CNN， Pytorch,  Python， Date:20
 
 # Introduce 
 The previous code had some issues, but now it has been re-submitted after being trained and verified for correctness.
-(以前的代码有点问题，现已经过训练验证正确性后从新提交。翻译为英文)
+(以前的代码有点问题，现已经过训练验证正确性后从新提交。)
 1. This is a retinal vessel segmentation, although its accuracy surpasses all current papers on the HRF, DRIVE, STARE, and CHASEDB1 datasets, it is not innovative and is a semi-finished paper.
 2. The paper only wrote the experimental part and recorded some experimental data in the Word document in the Comparative Literature folder.
 
