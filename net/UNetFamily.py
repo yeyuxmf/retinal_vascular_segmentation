@@ -20,7 +20,6 @@ class conv_block(nn.Module):
             nn.Conv2d(ch_in, ch_out, kernel_size=3, stride=1, padding=1, bias=True),
             nn.BatchNorm2d(ch_out),
             nn.ReLU(inplace=True),
-
             nn.Conv2d(ch_out, ch_out, kernel_size=3, stride=1, padding=1, bias=True),
             nn.BatchNorm2d(ch_out),
             nn.ReLU(inplace=True)
@@ -34,7 +33,9 @@ class up_conv(nn.Module):
     def __init__(self, ch_in, ch_out, scale_factor=2):
         super(up_conv, self).__init__()
         self.up = nn.Sequential(
-            nn.Upsample(scale_factor=scale_factor),
+            #nn.Upsample(scale_factor=scale_factor),
+            nn.ConvTranspose2d(ch_in, ch_in, kernel_size=2, stride=2, padding=0, bias=False),
+            #nn.BatchNorm2d(ch_in),
             nn.Conv2d(ch_in, ch_out, kernel_size=3, stride=1, padding=1, bias=True),
             nn.BatchNorm2d(ch_out),
             nn.ReLU(inplace=True)
@@ -293,10 +294,10 @@ from net.pos_embdb import get_2d_sincos_pos_embed
 class U_Nett(nn.Module):
     def __init__(self, img_ch=3, output_ch=2, fea_channels=64):
         super(U_Nett, self).__init__()
-
-        self.Maxpool1 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.Maxpool2 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.Maxpool3 = nn.MaxPool2d(kernel_size=2, stride=2)
+  
+        self.Maxpool1 = nn.Conv2d(fea_channels, fea_channels, kernel_size=3, stride=2, padding =1, bias = False)#nn.MaxPool2d(kernel_size=2, stride=2)#
+        self.Maxpool2 = nn.Conv2d(fea_channels*2, fea_channels*2, kernel_size=3, stride=2, padding =1, bias = False)#nn.MaxPool2d(kernel_size=2, stride=2)#
+        self.Maxpool3 = nn.Conv2d(fea_channels*4, fea_channels*4, kernel_size=3, stride=2, padding =1, bias = False)#nn.MaxPool2d(kernel_size=2, stride=2)#
 
         self.Conv1 = conv_block(ch_in=img_ch, ch_out=fea_channels)
         self.Conv2 = conv_block(ch_in=fea_channels, ch_out=fea_channels*2)
@@ -310,18 +311,26 @@ class U_Nett(nn.Module):
         self.transblock = nn.ModuleList([
             Block(dim=fea_channels*8, num_heads=fea_channels*8//64, mlp_ratio=2, qkv_bias=True, norm_layer=norm_layer)
             for i in range(4)])
-
-        # self.UaSp1 = UAFM_SpAtten(x_ch=fea_channels*4, y_ch=fea_channels*8, out_ch=fea_channels*4, ukernel_size=2, ksize=3)
+        
+        # self.sizem = 32
+        # self.param = nn.Parameter(torch.zeros(1, self.sizem * self.sizem, 1),requires_grad=True)  # fixed sin-cos embedding
+        # self.pos_embed = nn.Parameter(torch.zeros(1, self.sizem*self.sizem, fea_channels*8), requires_grad=False)  # fixed sin-cos embedding
+        # norm_layer = partial(nn.LayerNorm, eps=1e-6)
+        # self.transblock = nn.ModuleList([
+        #     Block(dim=fea_channels*8, num_heads=fea_channels*8//64, mlp_ratio=2, qkv_bias=True, norm_layer=norm_layer)
+        #     for i in range(4)])
+        
+    
+        #self.UaSp1 = UAFM_SpAtten(x_ch=fea_channels*4, y_ch=fea_channels*8, out_ch=fea_channels*4, ukernel_size=2, ksize=3)
 
         self.Up4 = up_conv(ch_in=fea_channels*8, ch_out=fea_channels*4)
         self.Up_conv4 = conv_block(ch_in=fea_channels*8, ch_out=fea_channels*4)
 
-        # self.UaSp2 = UAFM_SpAtten(x_ch=fea_channels * 2, y_ch=fea_channels * 4, out_ch=fea_channels * 4, ukernel_size=2, ksize=3)
+        #self.UaSp2 = UAFM_SpAtten(x_ch=fea_channels * 2, y_ch=fea_channels * 4, out_ch=fea_channels * 4, ukernel_size=2,ksize=3)
         self.Up3 = up_conv(ch_in=fea_channels*4, ch_out=fea_channels*2)
         self.Up_conv3 = conv_block(ch_in=fea_channels*4, ch_out=fea_channels*2)
 
-        # self.UaSp3 = UAFM_SpAtten(x_ch=fea_channels * 1, y_ch=fea_channels * 2, out_ch=fea_channels * 2, ukernel_size=3,ksize=3)
-
+        #self.UaSp3 = UAFM_SpAtten(x_ch=fea_channels * 1, y_ch=fea_channels * 2, out_ch=fea_channels * 2, ukernel_size=3,ksize=3)
         self.Up2 = up_conv(ch_in=fea_channels*2, ch_out=fea_channels*1, scale_factor=2)
         self.Up_conv2 = conv_block(ch_in=fea_channels*2, ch_out=fea_channels*1)
 
@@ -338,26 +347,26 @@ class U_Nett(nn.Module):
         # print('x1',x1.shape)
         x2 = self.Maxpool1(x1)
         x2 = self.Conv2(x2)
-        # print('x2',x2.shape)
+        # print('x2',x2.shape))
         x3 = self.Maxpool2(x2)
         x3 = self.Conv3(x3)
 
         x4 = self.Maxpool3(x3)
         x4 = self.Conv4(x4)
-
+        
         b, c, h, w = x4.shape
         x4 = x4.view(b, c, h* w).permute(0, 2, 1)
         xc = x4+ self.pos_embed
         for cpb in self.transblock:
             xc = cpb(xc)
         x4 = (self.param*xc + x4).permute(0, 2, 1).view(b, c, h, w)
+        # x4 = xc.permute(0, 2, 1).view(b, c, h, w)
 
-
-        #d4 = self.UaSp1(x3, x4)
+        # d4 = self.UaSp1(x3, x4)
         d4 = self.Up4(x4)
         d4 = torch.cat((x3, d4), dim=1)
         d4 = self.Up_conv4(d4)
-
+        
         #d3 = self.UaSp2(x2, d4)
         d3 = self.Up3(d4)
         d3 = torch.cat((x2, d3), dim=1)
@@ -369,15 +378,16 @@ class U_Nett(nn.Module):
         d2 = self.Up_conv2(d2)
 
         d1 = self.Conv_1x1(d2)
-        #d1 = F.softmax(d1,dim=1)  # mine
-
+        d1 = F.softmax(d1,dim=1)  # mine
+        #d1 = F.sigmoid(d1)  # mine
+        
         return [d1, d1,d1]
 
-# if __name__ == '__main__':
-#     net = U_Net(1,2)
-#     in1 = torch.randn(1,1,64,64)
-#     out1 = net(in1)
-#     print(out1.shape)
+if __name__ == '__main__':
+    net = U_Net(1,2)
+    in1 = torch.randn(1,1,64,64)
+    out1 = net(in1)
+    print(out1.shape)
 
 # # 计算参数量
 # def count_parameters(model):
@@ -771,19 +781,12 @@ class Dense_Unet(nn.Module):
         return x1
 # =========================================================
 
-if __name__ == '__main__':
-    net = U_Net(img_ch=3, output_ch=1, fea_channels=64)
-
-
-    from thop import profile
-    input = torch.randn(1, 3, 480, 384).cuda().float()
-    macs, params = profile(net.cuda(), inputs=(input,))
-    print(macs, params)
-
-    print(net)
-    in1 = torch.randn(4,3,224,224).cuda()
-    out = net(in1)
-    print(out.size())
+# if __name__ == '__main__':
+#     net = Dense_Unet(3,21,128).cuda()
+#     print(net)
+#     in1 = torch.randn(4,3,224,224).cuda()
+#     out = net(in1)
+#     print(out.size())
 
 # if __name__ == '__main__':
 #     # test network forward

@@ -52,7 +52,7 @@ class RetinalVasularSeg(SegmentationNetwork):
         self.encoder1 = UnetResBlock(
             spatial_dims=2,
             in_channels=in_channels,
-            out_channels=feature_size*2,
+            out_channels=feature_size,
             kernel_size=3,
             stride=1,
             norm_name=norm_name,
@@ -117,7 +117,6 @@ class RetinalVasularSeg(SegmentationNetwork):
         x_output, hidden_states = self.unetr_pp_encoder(x_in)
 
         convBlock = self.encoder1(x_in)
-        convBlock = self.encoder11(convBlock)
 
 
         # Four encoders

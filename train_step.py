@@ -63,12 +63,16 @@ class IOStream():
     def close(self):
         self.f.close()
 
+def adjust_learning_rate(optimizer, lr):
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+
 def train(args, io):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     file_path = "E:/vasular/DRIVE/training/images/"
     label_path = "E:/vasular/DRIVE/training/1st_manual/"
-    # file_path = "E:/vasular/CHASEDB1/images/"
-    # label_path = "E:/vasular/CHASEDB1/1st_label/"
+    # file_path = "G:/vasular/CHASEDB1/images/"
+    # label_path = "G:/vasular/CHASEDB1/1st_label/"
     # file_path = "G:/vasular/STAREdatabase/images/"
     # label_path = "G:/vasular/STAREdatabase/labels-ah/"
     # file_path = "G:/vasular/HRFdatas/images/"
@@ -77,14 +81,15 @@ def train(args, io):
                               batch_size=args.batch_size, shuffle=True, drop_last=True)
     file_path = "E:/vasular/DRIVE/test/images/"
     label_path = "E:/vasular/DRIVE/test/1st_manual/"
-    # file_path = "E:/vasular/CHASEDB1/test/"
-    # label_path = "E:/vasular/CHASEDB1/1st_label/"
+    # file_path = "G:/vasular/CHASEDB1/test/"
+    # label_path = "G:/vasular/CHASEDB1/1st_label/"
     # file_path = "G:/vasular/STAREdatabase/test/"
     # label_path = "G:/vasular/STAREdatabase/labels-ah/"
     # file_path = "G:/vasular/HRFdatas/test/"
     # label_path = "G:/vasular/HRFdatas/test/"
     test_loader = DataLoader(TestData(file_path, label_path, train_flag = False), num_workers=0,
                              batch_size=args.test_batch_size, shuffle=True, drop_last=False)
+    device = torch.device("cuda" if args.cuda else "cpu")
 
     # Try to load models
     model = RetinalVasularSegFF(in_channels=3,
@@ -97,13 +102,28 @@ def train(args, io):
                               hidden_size=256,
                             do_ds=True,
                             )
-
+    # model = HessianNet(in_channel=3, out_channels=2)
+    # model = U_Net(img_ch=3, output_ch=2, fea_channels=64)
     model_name = "./outputs/teethseg_model_200.pth"
     # model_initial(model, model_name)
 
-    opt = optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
-    scheduler = CosineAnnealingLR(opt, args.epochs, eta_min=1e-6, last_epoch = -1)
 
+    # model = nn.DataParallel(model)
+    print("Let's use", torch.cuda.device_count(), "GPUs!")
+    if args.use_sgd:
+        print("Use SGD")
+        opt = optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
+        # opt = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=1e-4)
+    else:
+        print("Use Adam")
+        opt = optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
+
+    if args.scheduler == 'cos':
+        scheduler = CosineAnnealingLR(opt, args.epochs, eta_min=1e-6, last_epoch = -1)
+    elif args.scheduler == 'step':
+        scheduler = StepLR(opt, step_size=20, gamma=0.7)
+
+    decay_lrs = cfg.DECAY_STEPS
     focalLoss = FocalLoss2d(gamma=2)#WeightedFocalLoss()#
 
     model.cuda()
@@ -111,19 +131,15 @@ def train(args, io):
     scaler = GradScaler()
     inter_nums = len(train_loader)
     total_acc = 0
+
     for epoch in range(0, args.epochs):
         ####################
         # Train
         ####################
-
-        if args.scheduler == 'cos':
-            scheduler.step()
-        elif args.scheduler == 'step':
-            if opt.param_groups[0]['lr'] > 1e-5:
-                scheduler.step()
-            if opt.param_groups[0]['lr'] < 1e-5:
-                for param_group in opt.param_groups:
-                    param_group['lr'] = 1e-5
+        if epoch in decay_lrs:
+            lr = decay_lrs[epoch]
+            adjust_learning_rate(opt, lr)
+            print('adjust learning rate to {}'.format(lr))
 
         train_loss = 0.0
         loss_dice = 0
@@ -157,7 +173,7 @@ def train(args, io):
 
                 sen_v_, acc_v_, spec_v_ = cal_sen(outputs_soft, train_label[:, :, :].long())
 
-                loss = (loss_seg + 1*loss_dice_ + 2*sec_loss)*1  #
+                loss = loss_seg +loss_dice_+ 2*sec_loss  #
 
             scaler.scale(loss).backward()
             # Unscales gradients and calls
@@ -230,18 +246,33 @@ def train(args, io):
 
 if __name__ == "__main__":
 
+    AI = torch.rand(7, 7)
+    mask = torch.tensor([[True, True,True,True, False, False, False]])
+
+    attn = AI.masked_fill(mask == 0, 0)
+    print(AI)
+    print(" ")
+    print(attn)
+
 
     torch.backends.cudnn.enabled = True
     # Training settings
-    parser = argparse.ArgumentParser(description='retinal vascular segmentation')
-    parser.add_argument('--exp_name', type=str, default='retinal', metavar='N',
+    parser = argparse.ArgumentParser(description='Point Cloud Recognition')
+    parser.add_argument('--exp_name', type=str, default='cls_1024', metavar='N',
                         help='Name of the experiment')
-    parser.add_argument('--batch_size', type=int, default=1, metavar='batch_size',
+    parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
+                        choices=['pointnet', 'dgcnn'],
+                        help='Model to use, [pointnet, dgcnn]')
+    parser.add_argument('--dataset', type=str, default='modelnet40', metavar='N',
+                        choices=['modelnet40'])
+    parser.add_argument('--batch_size', type=int, default=4, metavar='batch_size',
                         help='Size of batch)')
     parser.add_argument('--test_batch_size', type=int, default=1, metavar='batch_size',
                         help='Size of batch)')
     parser.add_argument('--epochs', type=int, default=1001, metavar='N',
                         help='number of episode to train ')
+    parser.add_argument('--use_sgd', type=bool, default=True,
+                        help='Use SGD')
     parser.add_argument('--lr', type=float, default=2*1e-3, metavar='LR',
                         help='learning rate (default: 0.001, 0.1 if using sgd)')
     parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
@@ -253,15 +284,34 @@ if __name__ == "__main__":
                         help='enables CUDA training')
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
+    parser.add_argument('--eval', type=bool, default=False,
+                        help='evaluate the model')
+    parser.add_argument('--num_points', type=int, default=2048,
+                        help='num of points to use')
+    parser.add_argument('--dropout', type=float, default=0.5,
+                        help='initial dropout rate')
+    parser.add_argument('--emb_dims', type=int, default=2048, metavar='N',
+                        help='Dimension of embeddings')
+    parser.add_argument('--k', type=int, default=40, metavar='N',
+                        help='Num of nearest neighbors to use')
+    parser.add_argument('--model_path', type=str, default='', metavar='N',
+                        help='Pretrained model path')
     args = parser.parse_args()
-
-    _init_()
 
     _init_()
 
     io = IOStream('outputs/' + args.exp_name + '/run.log')
     io.cprint(str(args))
 
-    train(args, io)
+    args.cuda = not args.no_cuda and torch.cuda.is_available()
+    # torch.manual_seed(args.seed)
+    if args.cuda:
+        io.cprint(
+            'Using GPU : ' + str(torch.cuda.current_device()) + ' from ' + str(torch.cuda.device_count()) + ' devices')
+        torch.cuda.manual_seed(args.seed)
+    else:
+        io.cprint('Using CPU')
 
+    if not args.eval:
+        train(args, io)
 

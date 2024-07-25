@@ -64,8 +64,8 @@ def model_forward(model, test_data, patch_size, hh,ww, stride_y, stride_x):
     for i in range(batch_nums):
         test_patch = torch.cat(test_datas[i*bsize:(i+1)*bsize], dim=0)
         outputs_segb = model(test_patch)[0]
-        outputs_softb = F.sigmoid(outputs_segb)
-        # outputs_softb = torch.softmax(outputs_segb, dim=1)[:, 1, :, :]
+        # outputs_softb = F.sigmoid(outputs_segb)
+        outputs_softb = torch.softmax(outputs_segb, dim=1)[:, 1, :, :]
         predb = torch.squeeze(outputs_softb).detach().cpu().numpy()
 
         for j in range(predb.shape[0]):
