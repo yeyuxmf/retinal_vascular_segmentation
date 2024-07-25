@@ -256,7 +256,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     _init_()
-
+    torch.cuda.manual_seed(args.seed)
     io = IOStream('outputs/' + args.exp_name + '/run.log')
     io.cprint(str(args))
 
