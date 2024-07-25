@@ -257,8 +257,6 @@ if __name__ == "__main__":
 
     _init_()
 
-    _init_()
-
     io = IOStream('outputs/' + args.exp_name + '/run.log')
     io.cprint(str(args))
 
