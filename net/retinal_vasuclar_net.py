@@ -44,7 +44,7 @@ class RetinalVasularSeg(SegmentationNetwork):
         self.hidden_size = hidden_size
         self.input_size = [self.feat_size[0]*8*self.feat_size[1]*8, self.feat_size[0]*4*self.feat_size[1]*4,
                            self.feat_size[0]*2*self.feat_size[1]*2, self.feat_size[0]*1*self.feat_size[1]*1]
-        self.unetr_pp_encoder = UnetrPPEncoder(input_size=self.input_size, patch_size=self.patch_size, dims=dims, depths=depths, num_heads=num_heads, in_channels=in_channels)
+        self.unetr_pp_encoder = UnetrPPEncoder(input_size=self.input_size, patch_size=self.patch_size, dims=dims, depths=depths, num_heads=num_heads, in_channels=feature_size)
 
         self.prarm = nn.Parameter(torch.tensor([0.2, 0.6, 0.2]),requires_grad=True).cuda().float()
         norm_name ='batch'
@@ -59,7 +59,7 @@ class RetinalVasularSeg(SegmentationNetwork):
         )
         self.encoder11 = UnetResBlock(
             spatial_dims=2,
-            in_channels=feature_size*2,
+            in_channels=feature_size,
             out_channels=feature_size,
             kernel_size=3,
             stride=1,
@@ -114,9 +114,11 @@ class RetinalVasularSeg(SegmentationNetwork):
 
     def forward(self, x_in):
 
-        x_output, hidden_states = self.unetr_pp_encoder(x_in)
-
         convBlock = self.encoder1(x_in)
+        x_output, hidden_states = self.unetr_pp_encoder(convBlock)
+
+
+        convBlock = self.encoder11(convBlock)
 
 
         # Four encoders

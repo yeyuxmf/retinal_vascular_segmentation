@@ -65,8 +65,8 @@ class IOStream():
 
 def train(args, io):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    file_path = "E:/vasular/DRIVE/training/images/"
-    label_path = "E:/vasular/DRIVE/training/1st_manual/"
+    file_path = "F:/DRIVE/training/images/"
+    label_path = "F:/DRIVE/training/1st_manual/"
     # file_path = "E:/vasular/CHASEDB1/images/"
     # label_path = "E:/vasular/CHASEDB1/1st_label/"
     # file_path = "G:/vasular/STAREdatabase/images/"
@@ -75,8 +75,8 @@ def train(args, io):
     # label_path = "G:/vasular/HRFdatas/images/"
     train_loader = DataLoader(TrainData(file_path, label_path, train_flag = True), num_workers=0,
                               batch_size=args.batch_size, shuffle=True, drop_last=True)
-    file_path = "E:/vasular/DRIVE/test/images/"
-    label_path = "E:/vasular/DRIVE/test/1st_manual/"
+    file_path = "F:/DRIVE/test/images/"
+    label_path = "F:/DRIVE/test/1st_manual/"
     # file_path = "E:/vasular/CHASEDB1/test/"
     # label_path = "E:/vasular/CHASEDB1/1st_label/"
     # file_path = "G:/vasular/STAREdatabase/test/"
@@ -236,7 +236,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='retinal vascular segmentation')
     parser.add_argument('--exp_name', type=str, default='retinal', metavar='N',
                         help='Name of the experiment')
-    parser.add_argument('--batch_size', type=int, default=1, metavar='batch_size',
+    parser.add_argument('--batch_size', type=int, default=4, metavar='batch_size',
                         help='Size of batch)')
     parser.add_argument('--test_batch_size', type=int, default=1, metavar='batch_size',
                         help='Size of batch)')
@@ -258,7 +258,7 @@ if __name__ == "__main__":
     _init_()
 
     _init_()
-
+    torch.cuda.manual_seed(args.seed)
     io = IOStream('outputs/' + args.exp_name + '/run.log')
     io.cprint(str(args))
 
