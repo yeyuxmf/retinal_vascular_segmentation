@@ -17,6 +17,7 @@ This is the model structure diagram in the UNETR++paper. I directly modified it 
 
 # Train
 python main.py 
+Note: The batch_size=4 during training cannot be easily changed, as it will affect the accuracy.
 # Test 
 python test.py  and python test_HRF.py
 HRF is a high-resolution dataset with different testing methods.
