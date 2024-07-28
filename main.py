@@ -21,7 +21,7 @@ from net.unetrpp_ff import RetinalVasularSegFF
 from net.UNetFamily import U_Net, AttU_Net, Dense_Unet
 # from net.Hessian import HessianNet
 from net.loss import dice_loss, FocalLoss2d, WeightedFocalLoss, cal_sen
-from test import model_forward
+from utils import model_forward
 import config.config as cfg
 
 def model_initial(model, model_name):
