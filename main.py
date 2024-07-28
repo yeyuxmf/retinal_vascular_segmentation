@@ -39,17 +39,17 @@ def model_initial(model, model_name):
     print("over")
 
 
-def _init_():
+def _init_(exp_name):
     if not os.path.exists('outputs'):
         os.makedirs('outputs')
-    if not os.path.exists('./outputs/' + args.exp_name):
-        os.makedirs('./outputs/' + args.exp_name)
-    if not os.path.exists('./outputs/' + args.exp_name + '/' + 'models'):
-        os.makedirs('./outputs/' + args.exp_name + '/' + 'models')
-    os.system('cp main_cls.py outputs' + '/' + args.exp_name + '/' + 'main_cls.py.backup')
-    os.system('cp model.py outputs' + '/' + args.exp_name + '/' + 'model.py.backup')
-    os.system('cp util.py outputs' + '/' + args.exp_name + '/' + 'util.py.backup')
-    os.system('cp data.py outputs' + '/' + args.exp_name + '/' + 'data.py.backup')
+    if not os.path.exists('./outputs/' + exp_name):
+        os.makedirs('./outputs/' + exp_name)
+    if not os.path.exists('./outputs/' + exp_name + '/' + 'models'):
+        os.makedirs('./outputs/' + exp_name + '/' + 'models')
+    os.system('cp main_cls.py outputs' + '/' + exp_name + '/' + 'main_cls.py.backup')
+    os.system('cp model.py outputs' + '/' + exp_name + '/' + 'model.py.backup')
+    os.system('cp util.py outputs' + '/' + exp_name + '/' + 'util.py.backup')
+    os.system('cp data.py outputs' + '/' + exp_name + '/' + 'data.py.backup')
 
 class IOStream():
     def __init__(self, path):
@@ -63,8 +63,19 @@ class IOStream():
     def close(self):
         self.f.close()
 
-def train(args, io):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+def train(io):
+
+
+    batch_size = 4
+    test_batch_size = 1
+    epochs = 1001
+    lr = 2 * 1e-3
+    momentum = 0.9
+    scheduler = 'cos'
+    no_cuda = False
+
+
+
     file_path = "F:/DRIVE/training/images/"
     label_path = "F:/DRIVE/training/1st_manual/"
     # file_path = "E:/vasular/CHASEDB1/images/"
@@ -74,7 +85,7 @@ def train(args, io):
     # file_path = "G:/vasular/HRFdatas/images/"
     # label_path = "G:/vasular/HRFdatas/images/"
     train_loader = DataLoader(TrainData(file_path, label_path, train_flag = True), num_workers=0,
-                              batch_size=args.batch_size, shuffle=True, drop_last=True)
+                              batch_size=batch_size, shuffle=True, drop_last=True)
     file_path = "F:/DRIVE/test/images/"
     label_path = "F:/DRIVE/test/1st_manual/"
     # file_path = "E:/vasular/CHASEDB1/test/"
@@ -84,7 +95,7 @@ def train(args, io):
     # file_path = "G:/vasular/HRFdatas/test/"
     # label_path = "G:/vasular/HRFdatas/test/"
     test_loader = DataLoader(TestData(file_path, label_path, train_flag = False), num_workers=0,
-                             batch_size=args.test_batch_size, shuffle=True, drop_last=False)
+                             batch_size=test_batch_size, shuffle=True, drop_last=False)
 
     # Try to load models
     model = RetinalVasularSegFF(in_channels=3,
@@ -101,8 +112,8 @@ def train(args, io):
     model_name = "./outputs/teethseg_model_200.pth"
     # model_initial(model, model_name)
 
-    opt = optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
-    scheduler = CosineAnnealingLR(opt, args.epochs, eta_min=1e-6, last_epoch = -1)
+    opt = optim.Adam(model.parameters(), lr=lr, weight_decay=1e-4)
+    scheduler = CosineAnnealingLR(opt, epochs, eta_min=1e-6, last_epoch = -1)
 
     focalLoss = FocalLoss2d(gamma=2)#WeightedFocalLoss()#
 
@@ -111,14 +122,14 @@ def train(args, io):
     scaler = GradScaler()
     inter_nums = len(train_loader)
     total_acc = 0
-    for epoch in range(0, args.epochs):
+    for epoch in range(0, epochs):
         ####################
         # Train
         ####################
 
-        if args.scheduler == 'cos':
+        if scheduler == 'cos':
             scheduler.step()
-        elif args.scheduler == 'step':
+        elif scheduler == 'step':
             if opt.param_groups[0]['lr'] > 1e-5:
                 scheduler.step()
             if opt.param_groups[0]['lr'] < 1e-5:
@@ -181,7 +192,7 @@ def train(args, io):
 
                 print("lr = ", opt.param_groups[0]['lr'])
                 outstr = 'epoch %d /%d,epoch %d /%d, loss: %.6f, loss_dice: %.6f, sen_v: %.6f, acc_v: %.6f, spec_v: %.6f, const time: %.6f' % (
-                 epoch,args.epochs, nums, inter_nums, train_loss, loss_dice, sen_v, acc_v, spec_v, toc - tic)
+                 epoch,epochs, nums, inter_nums, train_loss, loss_dice, sen_v, acc_v, spec_v, toc - tic)
 
                 io.cprint(outstr)
                 train_loss = 0.0
@@ -190,7 +201,7 @@ def train(args, io):
                 acc_v = 0
                 spec_v = 0
                 tic = time.time()
-        if 0 == epoch % 10 and epoch>300:
+        if 0 == epoch % 10 and epoch>10:
             test_nums = 0
             loss_dice, sen_v, acc_v, spec_v =0, 0, 0, 0
             model.eval()
@@ -233,34 +244,15 @@ if __name__ == "__main__":
 
     torch.backends.cudnn.enabled = True
     # Training settings
-    parser = argparse.ArgumentParser(description='retinal vascular segmentation')
-    parser.add_argument('--exp_name', type=str, default='retinal', metavar='N',
-                        help='Name of the experiment')
-    parser.add_argument('--batch_size', type=int, default=4, metavar='batch_size',
-                        help='Size of batch)')
-    parser.add_argument('--test_batch_size', type=int, default=1, metavar='batch_size',
-                        help='Size of batch)')
-    parser.add_argument('--epochs', type=int, default=1001, metavar='N',
-                        help='number of episode to train ')
-    parser.add_argument('--lr', type=float, default=2*1e-3, metavar='LR',
-                        help='learning rate (default: 0.001, 0.1 if using sgd)')
-    parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
-                        help='SGD momentum (default: 0.9)')
-    parser.add_argument('--scheduler', type=str, default='cos', metavar='N',
-                        choices=['cos', 'step'],
-                        help='Scheduler to use, [cos, step]')
-    parser.add_argument('--no_cuda', type=bool, default=False,
-                        help='enables CUDA training')
-    parser.add_argument('--seed', type=int, default=1, metavar='S',
-                        help='random seed (default: 1)')
-    args = parser.parse_args()
 
-    _init_()
+    exp_name = 'retinal'
+    seed = 1
 
-    torch.cuda.manual_seed(args.seed)
-    io = IOStream('outputs/' + args.exp_name + '/run.log')
-    io.cprint(str(args))
+    _init_(exp_name)
 
-    train(args, io)
+    torch.cuda.manual_seed(seed)
+    io = IOStream('outputs/' +exp_name + '/run.log')
+
+    train(io)
 
 
