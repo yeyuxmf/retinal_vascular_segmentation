@@ -57,7 +57,7 @@ def test():
 
     # Try to load models
     model = RetinalVasularSegFF(in_channels=3,
-                            out_channels=1,
+                            out_channels=2,
                             img_size=[cfg.CROP_SIZE, cfg.CROP_SIZE],
                             feature_size=16,
                             num_heads=4,
